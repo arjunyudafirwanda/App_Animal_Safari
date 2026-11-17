@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Animal Safari Coding adalah permainan edukasi untuk belajar urutan instruksi, pola, dan computational thinking bersama hewan-hewan safari."
+    />
+    <meta name="author" content="Arjun Yuda Firwanda" />
+    <meta name="theme-color" content="#183d35" />
+    <title>Animal Safari Coding | Coding for Kids</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=1" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <header class="site-header" id="top">
+      <div class="header-main">
+        <a class="brand" href="#home" aria-label="Animal Safari Coding beranda">
+          <span class="brand-mark" aria-hidden="true"><span>🦁</span></span>
+          <span class="brand-copy">
+            <strong>Animal Safari <em>Coding</em></strong>
+            <small>BUILD THE ANIMAL PARADE!</small>
+          </span>
+        </a>
+
+        <div class="header-stats" aria-label="Informasi permainan">
+          <div class="stat-pill level-pill">
+            <span class="stat-icon">🧭</span>
+            <span class="stat-copy"
+              ><small>LEVEL</small
+              ><strong id="levelNumber">1 / 20</strong></span
+            >
+          </div>
+          <div class="stat-pill score-pill">
+            <span class="stat-icon">⭐</span>
+            <span class="stat-copy"
+              ><small>SKOR TOTAL</small
+              ><strong id="totalScore">0 PTS</strong></span
+            >
+          </div>
+          <div class="stat-pill star-pill">
+            <span class="stat-icon">🏅</span>
+            <span class="stat-copy"
+              ><small>BINTANG</small><strong id="totalStars">0</strong></span
+            >
+          </div>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a class="nav-link active" href="#home" aria-current="location"
+          ><span>🏠</span> Beranda</a
+        >
+        <a class="nav-link" href="#safari"><span>🎮</span> Permainan</a>
+        <a class="nav-link" href="#guide"><span>📖</span> Panduan</a>
+        <a class="nav-link" href="#progress"><span>🏆</span> Progres</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero-section page-section" id="home">
+        <div class="hero-leaf leaf-one" aria-hidden="true">✦</div>
+        <div class="hero-leaf leaf-two" aria-hidden="true">✧</div>
+        <div class="hero-content">
+          <span class="eyebrow"
+            ><span class="eyebrow-dot"></span> A LITTLE ADVENTURE, A BIG
+            LEARNING JOURNEY</span
+          >
+          <h1>Welcome to the<br /><span>Animal Safari!</span></h1>
+          <p class="hero-description">
+            Ayo bantu teman-teman hewan membuat parade safari yang seru! Pilih
+            kartu hewan, susun urutannya, lalu jalankan instruksi seperti
+            seorang programmer cilik.
+          </p>
+          <div class="hero-highlights">
+            <span>🧩 Belajar urutan</span>
+            <span>🔁 Kenali pola</span>
+            <span>🌟 Raih bintang</span>
+          </div>
+          <a class="primary-button hero-button" href="#safari"
+            >Mulai Petualangan <span>→</span></a
+          >
+        </div>
+        <div class="hero-scene" aria-label="Ilustrasi hewan safari">
+          <div class="sun-disc"></div>
+          <div class="cloud cloud-one"></div>
+          <div class="cloud cloud-two"></div>
+          <div class="hill hill-back"></div>
+          <div class="hill hill-front"></div>
+          <div class="hero-animal hero-lion">
+            <span>🦁</span><small>Leo</small>
+          </div>
+          <div class="hero-animal hero-elephant">
+            <span>🐘</span><small>Ellie</small>
+          </div>
+          <div class="hero-animal hero-monkey">
+            <span>🐒</span><small>Momo</small>
+          </div>
+          <div class="floating-star star-one">✦</div>
+          <div class="floating-star star-two">✧</div>
+          <div class="scene-caption">LET'S MAKE A PARADE!</div>
+        </div>
+      </section>
+
+      <section class="game-section page-section" id="safari">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">YOUR SAFARI MISSION</span>
+            <h2>Build the <span>Animal Parade</span></h2>
+            <p>
+              Perhatikan contoh urutan hewan, lalu susun kartu yang sama di area
+              parade.
+            </p>
+          </div>
+          <div class="mission-level-chip">
+            <span>🌿</span><span id="missionLevelLabel">MISSION 01</span>
+          </div>
+        </div>
+
+        <div class="game-grid">
+          <section
+            class="mission-card panel-card"
+            aria-labelledby="missionTitle"
+          >
+            <div class="panel-heading">
+              <div>
+                <span class="mini-label">MISSION BRIEF</span>
+                <h3 id="missionTitle">Kenalan dengan Hewan</h3>
+              </div>
+              <span class="difficulty-badge" id="difficultyBadge">MUDAH</span>
+            </div>
+            <p class="mission-description" id="missionDescription">
+              Bantu Leo dan Ellie memulai parade safari. Susun hewan sesuai
+              urutan contoh!
+            </p>
+
+            <div class="target-area">
+              <div class="target-heading">
+                <strong>🎯 Contoh urutan parade</strong>
+                <span id="targetCount">2 hewan</span>
+              </div>
+              <div
+                class="target-sequence"
+                id="targetSequence"
+                aria-label="Contoh urutan parade"
+              ></div>
+            </div>
+
+            <div class="mission-tip" id="missionTip">
+              <span>💡</span>
+              <p>Perhatikan urutannya dari kiri ke kanan, ya!</p>
+            </div>
+            <div class="mission-footer">
+              <span>🌳 Safari Mission</span
+              ><span id="missionCategory">KENALI HEWAN</span>
+            </div>
+          </section>
+
+          <section
+            class="animal-picker panel-card"
+            aria-labelledby="animalPickerTitle"
+          >
+            <div class="panel-heading">
+              <div>
+                <span class="mini-label">CHOOSE YOUR FRIENDS</span>
+                <h3 id="animalPickerTitle">Pilih Kartu Hewan</h3>
+              </div>
+              <span class="little-count">5 TEMAN</span>
+            </div>
+            <p class="picker-description">
+              Ketuk kartu untuk memasukkan hewan ke dalam parade.
+            </p>
+            <div class="animal-cards" id="animalCards"></div>
+            <div class="picker-note">
+              <span>👆</span> Pilih hewan sesuai contoh urutan.
+            </div>
+          </section>
+        </div>
+
+        <section
+          class="sequence-panel panel-card"
+          aria-labelledby="sequenceTitle"
+        >
+          <div class="sequence-header">
+            <div>
+              <span class="mini-label">YOUR PROGRAM</span>
+              <h3 id="sequenceTitle">Susunan Parade</h3>
+              <p>Inilah urutan instruksi yang akan dijalankan.</p>
+            </div>
+            <span class="sequence-counter" id="sequenceCount"
+              >0 / 12 KARTU</span
+            >
+          </div>
+
+          <div class="sequence-tray" id="sequenceTray" aria-live="polite">
+            <div class="empty-sequence">
+              <span>🧺</span><strong>Parademu masih kosong</strong
+              ><small>Pilih kartu hewan untuk memulai.</small>
+            </div>
+          </div>
+
+          <div class="sequence-actions">
+            <div class="secondary-actions">
+              <button
+                class="soft-button"
+                id="undoButton"
+                type="button"
+                disabled
+              >
+                ↶ Urungkan
+              </button>
+              <button
+                class="soft-button"
+                id="clearButton"
+                type="button"
+                disabled
+              >
+                Hapus Semua
+              </button>
+            </div>
+            <button
+              class="primary-button run-button"
+              id="runButton"
+              type="button"
+              disabled
+            >
+              ▶ Jalankan Parade
+            </button>
+          </div>
+
+          <div
+            class="feedback-message"
+            id="feedbackMessage"
+            role="status"
+            aria-live="polite"
+          >
+            <span>🌼</span>
+            <p>Siap bermain? Susun parade hewanmu terlebih dahulu!</p>
+          </div>
+        </section>
+
+        <section class="parade-stage panel-card" aria-labelledby="paradeTitle">
+          <div class="stage-heading">
+            <div>
+              <span class="mini-label">SAFARI PARADE STAGE</span>
+              <h3 id="paradeTitle">Panggung Parade</h3>
+            </div>
+            <span class="stage-status" id="stageStatus">MENUNGGU PARADE</span>
+          </div>
+          <div class="stage-track" id="paradeStage">
+            <div class="stage-placeholder">
+              <span>🌴</span>
+              <p>
+                Hewan-hewan akan tampil di sini setelah kamu menekan
+                <strong>Jalankan Parade</strong>.
+              </p>
+              <span>🌴</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="guide-section page-section" id="guide">
+        <div class="section-heading compact-heading">
+          <div>
+            <span class="section-kicker">MEET YOUR SAFARI FRIENDS</span>
+            <h2>Kenali Teman <span>Hewanmu</span></h2>
+            <p>
+              Setiap hewan punya nama dan gerakan khas. Yuk, kenali semuanya!
+            </p>
+          </div>
+        </div>
+        <div class="guide-animal-grid" id="guideAnimalGrid"></div>
+        <div class="learning-note">
+          <span>🧠</span>
+          <div>
+            <strong>Apa yang dipelajari?</strong>
+            <p>
+              Sequencing (menyusun urutan), pattern recognition (mengenali
+              pola), debugging (memperbaiki susunan), dan repetition
+              (pengulangan sederhana).
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="progress-section page-section" id="progress">
+        <div class="section-heading compact-heading">
+          <div>
+            <span class="section-kicker">YOUR LEARNING JOURNEY</span>
+            <h2>Progres <span>Petualangan</span></h2>
+            <p>Selesaikan misi untuk membuka perjalanan safari berikutnya.</p>
+          </div>
+        </div>
+        <div class="progress-summary">
+          <div class="progress-stat">
+            <span class="progress-stat-icon">🧭</span>
+            <div>
+              <small>LEVEL TERBUKA</small
+              ><strong id="unlockedCount">1 / 20</strong>
+            </div>
+          </div>
+          <div class="progress-stat">
+            <span class="progress-stat-icon">⭐</span>
+            <div>
+              <small>SKOR TERBAIK</small
+              ><strong id="progressScore">0 PTS</strong>
+            </div>
+          </div>
+          <div class="progress-stat">
+            <span class="progress-stat-icon">🏅</span>
+            <div>
+              <small>BINTANG DIRAIH</small><strong id="progressStars">0</strong>
+            </div>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-label">
+            <strong>Perjalanan Safari</strong
+            ><span id="progressPercent">0% selesai</span>
+          </div>
+          <div class="progress-bar"><span id="progressBarFill"></span></div>
+        </div>
+        <div class="level-map-heading">
+          <strong>🗺️ Peta 20 Misi Safari</strong
+          ><small>Pilih level yang sudah terbuka untuk bermain kembali.</small>
+        </div>
+        <div class="level-map" id="levelMap" aria-label="Peta 20 level"></div>
+        <div class="progress-legend">
+          <span><i class="legend-dot legend-done"></i> Selesai</span
+          ><span
+            ><i class="legend-dot legend-current"></i> Sedang dimainkan</span
+          ><span><i class="legend-dot legend-locked"></i> Terkunci</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a href="#top" class="footer-brand"
+        ><span>🦁</span><strong>Animal Safari Coding</strong></a
+      >
+      <p>Belajar coding jadi petualangan yang menyenangkan.</p>
+      <div class="footer-line"></div>
+      <small
+        >Animal Safari Coding © <span id="copyrightYear">2026</span> | Arjun
+        Yuda Firwanda. All rights reserved.</small
+      >
+    </footer>
+
+    <div
+      class="modal-backdrop hidden"
+      id="resultModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="resultTitle"
+    >
+      <div class="result-modal">
+        <div class="result-confetti" aria-hidden="true">✦　✧　✦</div>
+        <div class="result-mascot" id="resultMascot">🦁</div>
+        <span class="result-kicker" id="resultKicker">MISSION COMPLETED</span>
+        <h2 id="resultTitle">Safari Hebat!</h2>
+        <p id="resultDescription">
+          Kamu berhasil menyusun parade dengan urutan yang tepat.
+        </p>
+        <div class="result-reward">
+          <div>
+            <span>⭐</span><strong id="earnedPoints">+100 PTS</strong
+            ><small>POIN DIDAPAT</small>
+          </div>
+          <div>
+            <span>🏅</span><strong id="earnedStars">1 / 2</strong
+            ><small>BINTANG LEVEL</small>
+          </div>
+        </div>
+        <p class="result-total" id="resultTotal">Total skor: 100 PTS</p>
+        <div class="result-actions">
+          <button class="soft-button" id="replayButton" type="button">
+            Main Lagi</button
+          ><button class="primary-button" id="nextButton" type="button">
+            Level Berikutnya →
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
