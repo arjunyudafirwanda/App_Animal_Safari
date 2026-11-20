@@ -264,16 +264,21 @@ const LEVELS = [
   },
 ];
 
-const STORAGE_KEY = "animal-safari-coding-progress-v1";
+const PROFILE_STORAGE_KEY = "animal-safari-coding-player-profiles-v2";
+const LEGACY_STORAGE_KEY = "animal-safari-coding-progress-v1";
 const MAX_SEQUENCE = 12;
 const BASE_POINTS = 100;
 const PERFECT_BONUS = 25;
+const PENALTY_AFTER_MISTAKES = 3;
+const PENALTY_POINTS = 20;
 
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   levelNumber: $("#levelNumber"),
   totalScore: $("#totalScore"),
   totalStars: $("#totalStars"),
+  playerNameDisplay: $("#playerNameDisplay"),
+  changePlayerButton: $("#changePlayerButton"),
   missionLevelLabel: $("#missionLevelLabel"),
   missionTitle: $("#missionTitle"),
   missionDescription: $("#missionDescription"),
@@ -309,69 +314,231 @@ const elements = {
   replayButton: $("#replayButton"),
   nextButton: $("#nextButton"),
   copyrightYear: $("#copyrightYear"),
+  playerModal: $("#playerModal"),
+  playerForm: $("#playerForm"),
+  playerNameInput: $("#playerNameInput"),
+  playerFormError: $("#playerFormError"),
+  cancelPlayerButton: $("#cancelPlayerButton"),
+  penaltyModal: $("#penaltyModal"),
+  penaltyDescription: $("#penaltyDescription"),
+  penaltyBefore: $("#penaltyBefore"),
+  penaltyAmount: $("#penaltyAmount"),
+  penaltyAfter: $("#penaltyAfter"),
+  closePenaltyButton: $("#closePenaltyButton"),
 };
 
 let currentLevel = 0;
 let sequence = [];
 let isRunning = false;
-let attemptsThisSession = 0;
-let state = loadProgress();
+let playerName = "";
+let playerKey = "";
+let state = defaultProgress();
+let profileStore = loadProfileStore();
 
 function defaultProgress() {
   return {
     unlockedLevel: 1,
+    currentLevel: 0,
     completed: [],
     attempts: {},
     bestScores: {},
     bestStars: {},
+    mistakes: {},
+    penaltyPoints: 0,
   };
 }
 
-function loadProgress() {
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function normalizeProgress(saved = {}) {
+  const fallback = defaultProgress();
+  const unlockedLevel = Math.max(
+    1,
+    Math.min(LEVELS.length, Number(saved.unlockedLevel) || 1),
+  );
+  const completed = Array.isArray(saved.completed)
+    ? [
+        ...new Set(
+          saved.completed
+            .map(Number)
+            .filter(
+              (value) =>
+                Number.isInteger(value) && value >= 0 && value < LEVELS.length,
+            ),
+        ),
+      ]
+    : [];
+  const rawCurrent = Number.isInteger(Number(saved.currentLevel))
+    ? Number(saved.currentLevel)
+    : Math.max(0, unlockedLevel - 1);
+  return {
+    ...fallback,
+    ...saved,
+    unlockedLevel,
+    currentLevel: Math.max(
+      0,
+      Math.min(unlockedLevel - 1, LEVELS.length - 1, rawCurrent),
+    ),
+    completed,
+    attempts: isPlainObject(saved.attempts) ? saved.attempts : {},
+    bestScores: isPlainObject(saved.bestScores) ? saved.bestScores : {},
+    bestStars: isPlainObject(saved.bestStars) ? saved.bestStars : {},
+    mistakes: isPlainObject(saved.mistakes) ? saved.mistakes : {},
+    penaltyPoints: Math.max(0, Number(saved.penaltyPoints) || 0),
+  };
+}
+
+function loadProfileStore() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (!saved || typeof saved !== "object") return defaultProgress();
-    return {
-      ...defaultProgress(),
-      ...saved,
-      completed: Array.isArray(saved.completed) ? saved.completed : [],
-      attempts:
-        saved.attempts && typeof saved.attempts === "object"
-          ? saved.attempts
-          : {},
-      bestScores:
-        saved.bestScores && typeof saved.bestScores === "object"
-          ? saved.bestScores
-          : {},
-      bestStars:
-        saved.bestStars && typeof saved.bestStars === "object"
-          ? saved.bestStars
-          : {},
-    };
+    const rawStore = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (rawStore) {
+      const parsed = JSON.parse(rawStore);
+      if (isPlainObject(parsed) && isPlainObject(parsed.profiles)) {
+        return {
+          activeKey:
+            typeof parsed.activeKey === "string" ? parsed.activeKey : "",
+          profiles: parsed.profiles,
+        };
+      }
+    }
   } catch (error) {
-    console.warn("Progress could not be loaded.", error);
-    return defaultProgress();
+    console.warn("Player profiles could not be loaded.", error);
   }
+
+  // Migrate the previous single-player save to the first username used.
+  let legacyProgress = null;
+  try {
+    const legacyRaw = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacyRaw) legacyProgress = normalizeProgress(JSON.parse(legacyRaw));
+  } catch (error) {
+    console.warn("Previous progress could not be migrated.", error);
+  }
+  return { activeKey: "", profiles: {}, legacyProgress };
+}
+
+function normalizePlayerName(name) {
+  return name.trim().replace(/\s+/g, " ");
+}
+
+function getPlayerKey(name) {
+  return normalizePlayerName(name).toLocaleLowerCase("id-ID");
+}
+
+function getRememberedPlayerName() {
+  const remembered = profileStore.profiles[profileStore.activeKey];
+  return remembered && typeof remembered.name === "string"
+    ? remembered.name
+    : "";
 }
 
 function saveProgress() {
+  if (!playerKey) return;
+  state.currentLevel = currentLevel;
+  profileStore.profiles[playerKey] = {
+    name: playerName,
+    progress: JSON.parse(JSON.stringify(state)),
+  };
+  profileStore.activeKey = playerKey;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profileStore));
   } catch (error) {
-    console.warn("Progress could not be saved in this browser.", error);
+    console.warn("Player progress could not be saved in this browser.", error);
   }
 }
 
-function getTotalScore() {
+function activatePlayer(name) {
+  const cleanName = normalizePlayerName(name);
+  const newKey = getPlayerKey(cleanName);
+  if (!newKey) return false;
+
+  if (playerKey) saveProgress();
+
+  const existingProfile = profileStore.profiles[newKey];
+  if (existingProfile && isPlainObject(existingProfile.progress)) {
+    playerName = existingProfile.name || cleanName;
+    state = normalizeProgress(existingProfile.progress);
+  } else {
+    playerName = cleanName;
+    if (
+      profileStore.legacyProgress &&
+      Object.keys(profileStore.profiles).length === 0
+    ) {
+      state = normalizeProgress(profileStore.legacyProgress);
+      profileStore.legacyProgress = null;
+    } else {
+      state = defaultProgress();
+    }
+  }
+
+  playerKey = newKey;
+  currentLevel = state.currentLevel;
+  sequence = [];
+  isRunning = false;
+  updatePlayerHeader();
+  renderLevel();
+  saveProgress();
+  setFeedback(
+    `Selamat datang, ${playerName}! Kamu melanjutkan Misi ${currentLevel + 1}.`,
+    "normal",
+  );
+  return true;
+}
+
+function updatePlayerHeader() {
+  elements.playerNameDisplay.textContent = playerName || "Pilih pemain";
+  elements.playerNameDisplay.title = playerName || "Belum ada pemain";
+  elements.changePlayerButton.disabled = !playerName || isRunning;
+}
+
+function openPlayerModal() {
+  elements.playerNameInput.value = playerName || getRememberedPlayerName();
+  elements.playerFormError.textContent = "";
+  elements.cancelPlayerButton.classList.toggle("hidden", !playerName);
+  elements.playerModal.classList.remove("hidden");
+  window.setTimeout(() => elements.playerNameInput.focus(), 30);
+}
+
+function closePlayerModal() {
+  elements.playerModal.classList.add("hidden");
+}
+
+function submitPlayer(event) {
+  event.preventDefault();
+  const name = normalizePlayerName(elements.playerNameInput.value);
+  if (name.length < 2) {
+    elements.playerFormError.textContent =
+      "Masukkan nama minimal 2 karakter, ya!";
+    elements.playerNameInput.focus();
+    return;
+  }
+  if (name.length > 24) {
+    elements.playerFormError.textContent = "Nama maksimal 24 karakter.";
+    elements.playerNameInput.focus();
+    return;
+  }
+  activatePlayer(name);
+  closePlayerModal();
+}
+
+function getRawTotalScore() {
   return Object.values(state.bestScores).reduce(
-    (sum, score) => sum + Number(score || 0),
+    (sum, score) => sum + Math.max(0, Number(score) || 0),
     0,
+  );
+}
+
+function getTotalScore() {
+  return Math.max(
+    0,
+    getRawTotalScore() - Math.max(0, Number(state.penaltyPoints) || 0),
   );
 }
 
 function getTotalStars() {
   return Object.values(state.bestStars).reduce(
-    (sum, stars) => sum + Number(stars || 0),
+    (sum, stars) => sum + Math.max(0, Number(stars) || 0),
     0,
   );
 }
@@ -380,6 +547,7 @@ function renderHeader() {
   elements.levelNumber.textContent = `${currentLevel + 1} / ${LEVELS.length}`;
   elements.totalScore.textContent = `${getTotalScore().toLocaleString("id-ID")} PTS`;
   elements.totalStars.textContent = String(getTotalStars());
+  updatePlayerHeader();
 }
 
 function renderTarget() {
@@ -485,19 +653,25 @@ function renderSequence(activeIndex = -1) {
         "aria-label",
         `Hapus kartu ${animal.name} nomor ${index + 1}`,
       );
-      remove.disabled = isRunning;
+      remove.disabled = isRunning || !playerKey;
       remove.addEventListener("click", () => removeAnimal(index));
       chip.append(number, emoji, copy, remove);
       elements.sequenceTray.append(chip);
     });
   }
+  const playerReady = Boolean(playerKey);
   elements.sequenceCount.textContent = `${sequence.length} / ${MAX_SEQUENCE} KARTU`;
-  elements.undoButton.disabled = isRunning || sequence.length === 0;
-  elements.clearButton.disabled = isRunning || sequence.length === 0;
-  elements.runButton.disabled = isRunning || sequence.length === 0;
+  elements.undoButton.disabled =
+    isRunning || !playerReady || sequence.length === 0;
+  elements.clearButton.disabled =
+    isRunning || !playerReady || sequence.length === 0;
+  elements.runButton.disabled =
+    isRunning || !playerReady || sequence.length === 0;
   document.querySelectorAll(".animal-card").forEach((button) => {
-    button.disabled = isRunning || sequence.length >= MAX_SEQUENCE;
+    button.disabled =
+      isRunning || !playerReady || sequence.length >= MAX_SEQUENCE;
   });
+  updatePlayerHeader();
 }
 
 function setFeedback(message, type = "normal") {
@@ -507,7 +681,6 @@ function setFeedback(message, type = "normal") {
     icons[type] || icons.normal;
   elements.feedbackMessage.querySelector("p").textContent = message;
   elements.feedbackMessage.classList.remove("feedback-pop");
-
   void elements.feedbackMessage.offsetWidth;
   elements.feedbackMessage.classList.add("feedback-pop");
 }
@@ -541,11 +714,17 @@ function renderLevel() {
   renderSequence();
   showStagePlaceholder();
   renderProgress();
-  setFeedback("Siap bermain? Susun parade hewanmu terlebih dahulu!", "normal");
+  setFeedback(
+    playerName
+      ? `Siap bermain, ${playerName}? Susun parade hewanmu terlebih dahulu!`
+      : "Masukkan username untuk mulai bermain.",
+    "normal",
+  );
+  saveProgress();
 }
 
 function addAnimal(animalId) {
-  if (isRunning || sequence.length >= MAX_SEQUENCE) return;
+  if (!playerKey || isRunning || sequence.length >= MAX_SEQUENCE) return;
   sequence.push(animalId);
   renderSequence();
   setFeedback(
@@ -555,7 +734,7 @@ function addAnimal(animalId) {
 }
 
 function removeAnimal(index) {
-  if (isRunning) return;
+  if (!playerKey || isRunning) return;
   const removed = sequence.splice(index, 1)[0];
   renderSequence();
   setFeedback(
@@ -565,14 +744,14 @@ function removeAnimal(index) {
 }
 
 function undoLast() {
-  if (isRunning || sequence.length === 0) return;
+  if (!playerKey || isRunning || sequence.length === 0) return;
   const removed = sequence.pop();
   renderSequence();
   setFeedback(`${ANIMALS[removed].name} diurungkan dari urutan.`, "normal");
 }
 
 function clearSequence() {
-  if (isRunning) return;
+  if (!playerKey || isRunning) return;
   sequence = [];
   renderSequence();
   showStagePlaceholder();
@@ -604,8 +783,76 @@ function arraysMatch(a, b) {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
 
+function scrollToParadeStage() {
+  const stageSection = document.querySelector(".parade-stage");
+  if (!stageSection) return;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
+  stageSection.scrollIntoView({
+    behavior: reduceMotion ? "auto" : "smooth",
+    block: "center",
+  });
+}
+
+function openPenaltyModal({ before, deduction, after }) {
+  elements.penaltyDescription.textContent = `${playerName}, kamu sudah tiga kali mencoba menyusun parade Misi ${currentLevel + 1}, tetapi urutannya belum tepat. Sebagai pengingat, skor dikurangi ${deduction} poin.`;
+  elements.penaltyBefore.textContent = `${before.toLocaleString("id-ID")} PTS`;
+  elements.penaltyAmount.textContent = `-${deduction.toLocaleString("id-ID")} PTS`;
+  elements.penaltyAfter.textContent = `${after.toLocaleString("id-ID")} PTS`;
+  elements.penaltyModal.classList.remove("hidden");
+  window.setTimeout(() => elements.closePenaltyButton.focus(), 30);
+}
+
+function closePenaltyModal() {
+  elements.penaltyModal.classList.add("hidden");
+  elements.runButton.focus();
+}
+
+function handleIncorrectAttempt() {
+  const levelKey = String(currentLevel);
+  const mistakes = Math.max(0, Number(state.mistakes[levelKey]) || 0) + 1;
+  state.mistakes[levelKey] = mistakes;
+  saveProgress();
+
+  if (mistakes >= PENALTY_AFTER_MISTAKES) {
+    const before = getTotalScore();
+    const deduction = Math.min(PENALTY_POINTS, before);
+    state.penaltyPoints =
+      Math.max(0, Number(state.penaltyPoints) || 0) + deduction;
+    state.mistakes[levelKey] = 0;
+    saveProgress();
+    renderHeader();
+    renderProgress();
+    setFeedback(
+      `Tiga kali belum tepat. Skor dikurangi ${deduction} poin. Coba periksa pola parade, ya!`,
+      "error",
+    );
+    openPenaltyModal({ before, deduction, after: getTotalScore() });
+    return;
+  }
+
+  const remaining = PENALTY_AFTER_MISTAKES - mistakes;
+  setFeedback(
+    `Hampir berhasil! Urutannya belum cocok. Ini kesalahan ke-${mistakes} dari ${PENALTY_AFTER_MISTAKES}. Periksa lagi, ya!`,
+    "error",
+  );
+  // Give an early reminder without reducing points.
+  if (remaining === 1) {
+    setFeedback(
+      `Hati-hati, ${playerName}! Ini kesalahan ke-2 dari 3. Satu kesalahan lagi akan mengurangi 20 poin.`,
+      "error",
+    );
+  }
+}
+
 async function runParade() {
+  if (!playerKey) {
+    openPlayerModal();
+    return;
+  }
   if (isRunning || sequence.length === 0) return;
+
   isRunning = true;
   const attemptNumber = Number(state.attempts[currentLevel] || 0);
   const submittedSequence = [...sequence];
@@ -619,9 +866,14 @@ async function runParade() {
   elements.paradeStage.replaceChildren();
   setStageStatus("PARADE BERJALAN", "running");
   setFeedback(
-    "Musik parade dimulai! Yuk, lihat hewan-hewan tampil satu per satu. 🎵",
+    `${playerName}, parade safari dimulai! Yuk, lihat hewan-hewan tampil satu per satu. 🎵`,
     "normal",
   );
+
+  // Bring the parade stage into view before animating the performers.
+  scrollToParadeStage();
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+    await delay(420);
 
   for (let index = 0; index < submittedSequence.length; index += 1) {
     renderSequence(index);
@@ -634,18 +886,16 @@ async function runParade() {
 
   isRunning = false;
   renderSequence();
-  const isCorrect = arraysMatch(submittedSequence, LEVELS[currentLevel].target);
   state.attempts[currentLevel] = attemptNumber + 1;
   saveProgress();
 
-  if (isCorrect) {
+  if (arraysMatch(submittedSequence, LEVELS[currentLevel].target)) {
+    state.mistakes[String(currentLevel)] = 0;
     completeLevel(attemptNumber === 0);
   } else {
     setStageStatus("COBA LAGI", "waiting");
-    setFeedback(
-      "Hampir berhasil! Ada urutan yang belum cocok. Periksa kembali kartu parade dan coba lagi, ya!",
-      "error",
-    );
+    handleIncorrectAttempt();
+    renderSequence();
   }
 }
 
@@ -662,12 +912,13 @@ function completeLevel(isFirstAttempt) {
     Number(state.unlockedLevel || 1),
     Math.min(LEVELS.length, currentLevel + 2),
   );
+  state.mistakes[String(currentLevel)] = 0;
   saveProgress();
   renderHeader();
   renderProgress();
   setStageStatus("PARADE BERHASIL", "finished");
   setFeedback(
-    "Yeay! Parade safari berhasil disusun dengan tepat. Hebat!",
+    `Yeay, ${playerName}! Parade safari berhasil disusun dengan tepat. Hebat!`,
     "success",
   );
 
@@ -679,14 +930,14 @@ function completeLevel(isFirstAttempt) {
     ? "GRAND SAFARI COMPLETED"
     : "MISSION COMPLETED";
   elements.resultTitle.textContent = isFinal
-    ? "Safari Luar Biasa!"
-    : "Parade Berhasil!";
+    ? `Safari Luar Biasa, ${playerName}!`
+    : `Parade Berhasil, ${playerName}!`;
   elements.resultDescription.textContent = isFirstAttempt
     ? "Sempurna! Kamu menyusun urutan dengan benar pada percobaan pertama."
     : "Kamu berhasil memperbaiki urutan dan menyelesaikan misi. Terus semangat!";
   elements.earnedPoints.textContent = `+${earnedPoints} PTS`;
   elements.earnedStars.textContent = `${earnedStars} / 2`;
-  elements.resultTotal.textContent = `Total skor terbaik: ${getTotalScore().toLocaleString("id-ID")} PTS`;
+  elements.resultTotal.textContent = `Total skor: ${getTotalScore().toLocaleString("id-ID")} PTS`;
   elements.replayButton.textContent = "Main Level Ini Lagi";
   elements.nextButton.textContent = isFinal
     ? "Ulangi dari Level 1 ↺"
@@ -709,9 +960,12 @@ function goToNextLevel() {
       : Math.min(currentLevel + 1, LEVELS.length - 1);
   sequence = [];
   renderLevel();
-  document
-    .querySelector("#safari")
-    .scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector("#safari").scrollIntoView({
+    behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? "auto"
+      : "smooth",
+    block: "start",
+  });
 }
 
 function renderProgress() {
@@ -736,7 +990,7 @@ function renderProgress() {
     button.type = "button";
     button.className = "level-node";
     button.textContent = isCompleted ? "✓" : String(number);
-    button.disabled = !isUnlocked;
+    button.disabled = !isUnlocked || !playerKey;
     button.classList.toggle("unlocked", isUnlocked);
     button.classList.toggle("completed", isCompleted);
     button.classList.toggle("current", index === currentLevel);
@@ -753,13 +1007,17 @@ function renderProgress() {
       : `Selesaikan level sebelumnya untuk membuka ${number}`;
     if (isUnlocked) {
       button.addEventListener("click", () => {
-        if (isRunning) return;
+        if (isRunning || !playerKey) return;
         currentLevel = index;
         sequence = [];
         renderLevel();
-        document
-          .querySelector("#safari")
-          .scrollIntoView({ behavior: "smooth", block: "start" });
+        document.querySelector("#safari").scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
       });
     } else {
       button.textContent = "🔒";
@@ -836,7 +1094,6 @@ function setupRevealAnimations() {
     ),
   ];
   if (!targets.length) return;
-
   if (
     window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
     !("IntersectionObserver" in window)
@@ -844,7 +1101,6 @@ function setupRevealAnimations() {
     targets.forEach((target) => target.classList.add("is-visible"));
     return;
   }
-
   const observer = new IntersectionObserver(
     (entries, currentObserver) => {
       entries.forEach((entry) => {
@@ -855,7 +1111,6 @@ function setupRevealAnimations() {
     },
     { threshold: 0.08, rootMargin: "0px 0px -35px 0px" },
   );
-
   targets.forEach((target, index) => {
     target.classList.add("reveal-on-scroll");
     if (index % 4 === 1) target.classList.add("reveal-delay-1");
@@ -880,17 +1135,32 @@ function setupEvents() {
   elements.runButton.addEventListener("click", runParade);
   elements.replayButton.addEventListener("click", replayCurrentLevel);
   elements.nextButton.addEventListener("click", goToNextLevel);
+  elements.changePlayerButton.addEventListener("click", () => {
+    if (isRunning) return;
+    saveProgress();
+    openPlayerModal();
+  });
+  elements.playerForm.addEventListener("submit", submitPlayer);
+  elements.cancelPlayerButton.addEventListener("click", closePlayerModal);
+  elements.closePenaltyButton.addEventListener("click", closePenaltyModal);
   elements.resultModal.addEventListener("click", (event) => {
-    if (event.target === elements.resultModal) {
-      event.preventDefault();
-    }
+    if (event.target === elements.resultModal) event.preventDefault();
+  });
+  elements.penaltyModal.addEventListener("click", (event) => {
+    if (event.target === elements.penaltyModal) event.preventDefault();
   });
   document.addEventListener("keydown", (event) => {
-    if (
-      event.key === "Escape" &&
-      !elements.resultModal.classList.contains("hidden")
-    ) {
+    if (event.key !== "Escape") return;
+    if (!elements.penaltyModal.classList.contains("hidden")) {
+      closePenaltyModal();
+      return;
+    }
+    if (!elements.resultModal.classList.contains("hidden")) {
       elements.nextButton.focus();
+      return;
+    }
+    if (!elements.playerModal.classList.contains("hidden") && playerKey) {
+      closePlayerModal();
     }
   });
 }
@@ -904,6 +1174,8 @@ function initializeApp() {
   setupNavigation();
   setupRevealAnimations();
   setupHeaderScrollEffect();
+  updatePlayerHeader();
+  openPlayerModal();
 }
 
 initializeApp();

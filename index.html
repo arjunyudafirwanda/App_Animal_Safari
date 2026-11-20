@@ -18,6 +18,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style-patch.css" />
   </head>
 
   <body>
@@ -32,6 +33,21 @@
         </a>
 
         <div class="header-stats" aria-label="Informasi permainan">
+          <div class="stat-pill player-pill">
+            <span class="stat-icon">👤</span>
+            <span class="stat-copy"
+              ><small>PEMAIN</small
+              ><strong id="playerNameDisplay">Pilih pemain</strong></span
+            >
+            <button
+              id="changePlayerButton"
+              class="player-switch-button"
+              type="button"
+              disabled
+            >
+              Ganti
+            </button>
+          </div>
           <div class="stat-pill level-pill">
             <span class="stat-icon">🧭</span>
             <span class="stat-copy"
@@ -141,11 +157,10 @@
               Bantu Leo dan Ellie memulai parade safari. Susun hewan sesuai
               urutan contoh!
             </p>
-
             <div class="target-area">
               <div class="target-heading">
-                <strong>🎯 Contoh urutan parade</strong>
-                <span id="targetCount">2 hewan</span>
+                <strong>🎯 Contoh urutan parade</strong
+                ><span id="targetCount">2 hewan</span>
               </div>
               <div
                 class="target-sequence"
@@ -153,7 +168,6 @@
                 aria-label="Contoh urutan parade"
               ></div>
             </div>
-
             <div class="mission-tip" id="missionTip">
               <span>💡</span>
               <p>Perhatikan urutannya dari kiri ke kanan, ya!</p>
@@ -199,14 +213,12 @@
               >0 / 12 KARTU</span
             >
           </div>
-
           <div class="sequence-tray" id="sequenceTray" aria-live="polite">
             <div class="empty-sequence">
               <span>🧺</span><strong>Parademu masih kosong</strong
               ><small>Pilih kartu hewan untuk memulai.</small>
             </div>
           </div>
-
           <div class="sequence-actions">
             <div class="secondary-actions">
               <button
@@ -235,7 +247,6 @@
               ▶ Jalankan Parade
             </button>
           </div>
-
           <div
             class="feedback-message"
             id="feedbackMessage"
@@ -356,6 +367,99 @@
     </footer>
 
     <div
+      class="modal-backdrop player-modal-backdrop hidden"
+      id="playerModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="playerModalTitle"
+      aria-describedby="playerModalDescription"
+    >
+      <div class="player-modal">
+        <div class="player-modal-mascot">🦁</div>
+        <span class="player-modal-kicker">WELCOME, LITTLE CODER!</span>
+        <h2 id="playerModalTitle">Siapa Nama Petualang Hari Ini?</h2>
+        <p id="playerModalDescription">
+          Masukkan username kamu untuk memulai petualangan safari. Setiap pemain
+          memiliki progres dan skor sendiri.
+        </p>
+        <form id="playerForm" class="player-form">
+          <label for="playerNameInput">Nama Pemain</label>
+          <input
+            id="playerNameInput"
+            name="playerName"
+            type="text"
+            maxlength="24"
+            minlength="2"
+            autocomplete="nickname"
+            placeholder="Contoh: Aisyah"
+            required
+          />
+          <p
+            class="player-form-error"
+            id="playerFormError"
+            aria-live="polite"
+          ></p>
+          <button class="primary-button player-submit-button" type="submit">
+            Mulai Petualangan <span>→</span>
+          </button>
+          <button
+            class="soft-button player-cancel-button hidden"
+            id="cancelPlayerButton"
+            type="button"
+          >
+            Kembali ke permainan
+          </button>
+        </form>
+        <small class="player-modal-note"
+          >Progres disimpan pada browser dan perangkat yang sedang
+          digunakan.</small
+        >
+      </div>
+    </div>
+
+    <div
+      class="modal-backdrop penalty-backdrop hidden"
+      id="penaltyModal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="penaltyTitle"
+      aria-describedby="penaltyDescription"
+    >
+      <div class="penalty-modal">
+        <div class="penalty-icon" aria-hidden="true">🌧️</div>
+        <span class="penalty-kicker">SAFARI REMINDER</span>
+        <h2 id="penaltyTitle">Yuk, Periksa Lagi!</h2>
+        <p id="penaltyDescription">
+          Kamu sudah tiga kali mencoba dengan urutan yang belum tepat.
+        </p>
+        <div class="penalty-score-grid">
+          <div>
+            <small>SKOR SEBELUMNYA</small
+            ><strong id="penaltyBefore">0 PTS</strong>
+          </div>
+          <div class="penalty-deduction">
+            <small>PENGURANGAN</small
+            ><strong id="penaltyAmount">-20 PTS</strong>
+          </div>
+          <div>
+            <small>SKOR SEKARANG</small><strong id="penaltyAfter">0 PTS</strong>
+          </div>
+        </div>
+        <p class="penalty-help">
+          Tidak apa-apa melakukan kesalahan. Periksa pola parade, perbaiki
+          susunannya, lalu coba lagi!
+        </p>
+        <button
+          class="primary-button penalty-close-button"
+          id="closePenaltyButton"
+          type="button"
+        >
+          Mengerti, Aku Coba Lagi!
+        </button>
+      </div>
+    </div>
+
+    <div
       class="modal-backdrop hidden"
       id="resultModal"
       role="dialog"
@@ -383,8 +487,9 @@
         <p class="result-total" id="resultTotal">Total skor: 100 PTS</p>
         <div class="result-actions">
           <button class="soft-button" id="replayButton" type="button">
-            Main Lagi</button
-          ><button class="primary-button" id="nextButton" type="button">
+            Main Level Ini Lagi
+          </button>
+          <button class="primary-button" id="nextButton" type="button">
             Level Berikutnya →
           </button>
         </div>

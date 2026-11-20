@@ -1,71 +1,42 @@
-# Animal Safari Coding
+# Animal Safari Coding v1.3 — Update Pack
 
-**Build the Animal Parade!** — permainan edukasi web untuk memperkenalkan sequencing, pattern recognition, debugging sederhana, dan repetition kepada anak usia TK (sekitar 4–7 tahun).
+Paket ini memperbarui proyek Animal Safari Coding yang sudah ada dengan empat perubahan:
 
-## Isi folder
+1. Setiap username memiliki progres, level terakhir, skor terbaik, bintang, jumlah percobaan, dan riwayat kesalahan sendiri.
+2. Tombol **Ganti** membuka dialog pemain. Profil yang sudah pernah digunakan akan melanjutkan level terakhirnya. Username baru memulai dari Level 1.
+3. Tombol **Jalankan Parade** mengarahkan layar secara smooth ke **Panggung Parade** sebelum animasi hewan berjalan.
+4. Setelah tiga jawaban/urutan salah pada misi yang sama, muncul popup penalti yang menampilkan skor sebelum pengurangan, jumlah poin yang dipotong (maksimal 20), dan skor setelah pengurangan.
 
-- `index.html` — struktur halaman dan komponen permainan.
-- `style.css` — desain responsif, sticky header, transisi antarkomponen, hover/active states, animasi kartu, panggung parade, modal hasil, dan dukungan pengurangan gerakan.
-- `script.js` — 20 level, mekanisme penyusunan parade, pemeriksaan urutan, skor, bintang, progres, scroll-reveal, efek header saat halaman digulir, dan penyimpanan lokal.
-- `favicon.svg` — ikon singa untuk tab browser.
+## Cara menerapkan
 
-## Cara menjalankan
+Paket ini adalah **update pack** untuk folder proyek yang sudah memiliki `style.css` asli.
 
-1. Buka folder ini di Visual Studio Code.
-2. Jalankan `index.html` dengan ekstensi Live Server, atau buka langsung file HTML di browser.
-3. Pilih kartu hewan untuk menyusun parade.
-4. Tekan **Jalankan Parade** untuk melihat urutan hewan tampil satu per satu.
-5. Susun ulang jika urutan belum sesuai, lalu coba kembali.
+1. Cadangkan folder proyek yang saat ini digunakan.
+2. Salin `index.html`, `script.js`, dan `favicon.svg` dari paket ini ke folder proyek lama, lalu timpa file dengan nama yang sama.
+3. Salin `style-patch.css` ke folder yang sama. File `index.html` versi ini sudah memanggil `style.css` lama dan `style-patch.css` baru secara berurutan.
+4. Pertahankan `style.css` asli Anda; jangan dihapus atau ditimpa dengan `style-patch.css`.
+5. Jalankan ulang aplikasi dan masukkan username.
 
-Tidak memerlukan framework, backend, database, atau instalasi package.
+## Penyimpanan profil
 
-## Penyempurnaan antarmuka V1.1
+- Profil disimpan di `localStorage` browser/perangkat yang digunakan.
+- Username yang sama (tidak membedakan huruf besar/kecil) akan membuka profil yang sama.
+- Profil baru dimulai dari Level 1.
+- Pergantian pemain tidak menghapus profil pemain sebelumnya.
+- Progres lama dari satu profil global versi sebelumnya akan dimigrasikan ke username pertama yang masuk, selama data lama masih tersedia di browser.
+- Data tidak tersinkronisasi otomatis antarbrowser atau antarperangkat.
 
-- Transisi hover dan sentuhan untuk tombol, kartu hewan, kartu target, kartu urutan, statistik, dan peta level.
-- Efek masuk lembut saat bagian halaman pertama kali terlihat ketika pengguna menggulir.
-- Animasi parade bertahap dengan jeda antarkarakter, serta gerakan lembut pada karakter yang sedang tampil.
-- Feedback dan status parade memiliki animasi transisi yang halus.
-- Header sticky memperoleh bayangan sedikit lebih kuat saat halaman digulir.
-- Pengaturan `prefers-reduced-motion` menghormati preferensi pengguna yang mengurangi animasi.
-- Efek hover yang mengangkat elemen dinonaktifkan pada layar sentuh agar tidak mengganggu interaksi.
+## Aturan penalti
 
-## Aturan permainan
+- Kesalahan dihitung per level dan per pemain.
+- Setiap tiga urutan yang salah memunculkan popup dan mengurangi maksimal 20 poin dari skor total.
+- Pengurangan tidak membuat skor menjadi negatif; jika skor belum mencapai 20, sistem hanya memotong sisa skor yang tersedia.
+- Setelah penalti, hitungan kesalahan untuk level tersebut kembali ke nol dan siklus tiga kesalahan dimulai lagi.
+- Menyelesaikan level dengan benar menghapus hitungan kesalahan pada level tersebut.
 
-- Anak melihat contoh urutan parade pada kartu misi.
-- Anak memilih kartu Singa, Gajah, Monyet, Zebra, atau Jerapah untuk meniru susunan target.
-- Kartu dapat dihapus satu per satu, diurungkan, atau dikosongkan seluruhnya.
-- Parade dinyatakan berhasil apabila urutan dan jumlah kartu sama persis dengan target.
-- Level berikutnya terbuka setelah level saat ini berhasil diselesaikan.
+## File
 
-## Sistem skor
-
-- Menyelesaikan level: **100 poin**.
-- Menyelesaikan level pada percobaan pertama: **bonus 25 poin**.
-- Bintang level: 1 bintang untuk keberhasilan, ditambah 1 bintang bonus untuk keberhasilan pada percobaan pertama.
-- Skor total memakai skor terbaik setiap level. Mengulang level tidak dapat menggandakan poin.
-- Skor, bintang, level terbuka, dan penyelesaian disimpan di `localStorage` browser.
-
-## Rangkaian 20 level
-
-| Level | Misi                                                                                            | Fokus                                        |
-| ----: | ----------------------------------------------------------------------------------------------- | -------------------------------------------- |
-|   1–4 | Kenalan dengan Hewan, Dua Teman Baru, Tiga Hewan Safari, Parade di Padang Rumput                | Pengenalan karakter dan urutan sederhana     |
-|   5–6 | Parade Bertiga, Gajah Datang Lagi                                                               | Sequencing dan pengulangan sederhana         |
-|   7–8 | Pola Zebra dan Jerapah, Pola Bergantian                                                         | Pola AB dan pengenalan pola                  |
-|  9–10 | Empat Penjuru Safari, Barisan Terbalik                                                          | Urutan empat kartu                           |
-| 11–12 | Pola ABABA, Pola Tiga Sahabat                                                                   | Pola berulang dan pola tiga karakter         |
-| 13–16 | Monyet Muncul Dua Kali, Pola Tiga Hewan Berulang, Zebra dan Jerapah Bergantian, Perbaiki Parade | Pengulangan, ketelitian, dan debugging       |
-| 17–19 | Safari Enam Langkah, Pola Tiga Sahabat Berulang, Petualangan Safari Panjang                     | Tantangan kombinasi dan pola lanjutan        |
-|    20 | Grand Safari Parade                                                                             | Misi akhir: lima hewan dan sepuluh instruksi |
-
-## Mekanisme akhir permainan
-
-Setelah Level 20 selesai, tombol **Ulangi dari Level 1** membawa pemain kembali ke misi pertama. Skor terbaik dan pencapaian tetap tersimpan. Progres dapat dihapus melalui pengaturan data situs/browser jika diperlukan.
-
-## Copyright
-
-Animal Safari Coding © 2026 | Arjun Yuda Firwanda. All rights reserved.
-
-## Publikasi GitHub Pages
-
-Unggah isi folder proyek ke repository GitHub, pastikan `index.html` berada di root publikasi, lalu aktifkan GitHub Pages melalui pengaturan repository. File favicon menggunakan SVG relatif (`favicon.svg`), sehingga akan ikut terpublikasi bersama halaman.
+- `index.html`: tampilan utama dan dialog username/penalti.
+- `script.js`: logika permainan, profil pemain, progres per pemain, auto-scroll, dan penalti.
+- `style-patch.css`: gaya tambahan untuk header pemain dan dialog.
+- `favicon.svg`: ikon tab browser.
